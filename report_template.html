@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Outreach Report — OutreachAnalyzer by Salora AI</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+    background: #f5f5f7; color: #1d1d1f; line-height: 1.5;
+    padding: 40px 20px;
+  }
+  .container { max-width: 960px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 40px; }
+  header h1 { font-size: 2.2em; font-weight: 700; letter-spacing: -0.02em; }
+  header .subtitle { color: #86868b; font-size: 1.05em; margin-top: 6px; }
+  header .brand { color: #0071e3; font-weight: 600; font-size: 0.85em; margin-top: 10px; }
+  .card {
+    background: #fff; border-radius: 18px; padding: 32px;
+    margin-bottom: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .card h2 { font-size: 1.35em; font-weight: 600; margin-bottom: 20px; letter-spacing: -0.01em; }
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+  }
+  .stat-tile {
+    background: #f5f5f7; border-radius: 12px; padding: 18px; text-align: center;
+  }
+  .stat-tile .value { font-size: 1.8em; font-weight: 700; color: #0071e3; }
+  .stat-tile .label { font-size: 0.82em; color: #86868b; margin-top: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92em; }
+  th { text-align: left; color: #86868b; font-weight: 500; padding: 10px 12px; border-bottom: 1px solid #e5e5e7; }
+  td { padding: 10px 12px; border-bottom: 1px solid #f0f0f2; }
+  tr:last-child td { border-bottom: none; }
+  .rate-high { color: #28a745; font-weight: 600; }
+  .rate-mid { color: #e6a800; font-weight: 600; }
+  .rate-low { color: #dc3545; font-weight: 600; }
+  .preview { color: #6e6e73; font-size: 0.88em; max-width: 400px; }
+  a { color: #0071e3; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .insights-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+  }
+  @media (max-width: 700px) { .insights-grid { grid-template-columns: 1fr; } }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .bar-label { width: 80px; font-size: 0.88em; text-align: right; flex-shrink: 0; }
+  .bar-track { flex: 1; background: #f0f0f2; border-radius: 6px; height: 24px; position: relative; }
+  .bar-fill { height: 100%; border-radius: 6px; background: #0071e3; min-width: 2px; }
+  .bar-value { font-size: 0.82em; font-weight: 600; margin-left: 8px; white-space: nowrap; flex-shrink: 0; }
+  .bar-count { font-size: 0.75em; color: #86868b; margin-left: 4px; }
+  footer { text-align: center; color: #86868b; font-size: 0.82em; margin-top: 40px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Outreach Report</h1>
+    <div class="subtitle">{{ stats.general.date_range }}</div>
+    <div class="brand">OutreachAnalyzer by <a href="https://www.salora.ai">Salora AI</a></div>
+  </header>
+
+  <div class="card">
+    <h2>Overview</h2>
+    <div class="stats-grid">
+      <div class="stat-tile">
+        <div class="value">{{ "{:,}".format(stats.general.total_connections) }}</div>
+        <div class="label">Connections</div>
+      </div>
+      <div class="stat-tile">
+        <div class="value">{{ stats.general.total_outreach }}</div>
+        <div class="label">Outreach Sent</div>
+      </div>
+      <div class="stat-tile">
+        <div class="value">{{ stats.general.total_responses }}</div>
+        <div class="label">Responses</div>
+      </div>
+      <div class="stat-tile">
+        <div class="value">{{ stats.general.response_rate }}%</div>
+        <div class="label">Response Rate (Outreach)</div>
+      </div>
+      <div class="stat-tile">
+        <div class="value">{{ stats.general.response_rate_connections }}%</div>
+        <div class="label">Response Rate (Connections)</div>
+      </div>
+      {% if stats.response_timing %}
+      <div class="stat-tile">
+        <div class="value">{{ stats.response_timing.median_hours }}h</div>
+        <div class="label">Median Response Time</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if stats.day_of_week or stats.message_length %}
+  <div class="card">
+    <h2>Insights</h2>
+    <div class="insights-grid">
+      {% if stats.day_of_week %}
+      <div>
+        <h3 style="font-size: 1em; margin-bottom: 12px; color: #86868b;">Response Rate by Day</h3>
+        {% set max_rate = stats.day_of_week | map(attribute='rate') | max %}
+        {% for d in stats.day_of_week %}
+        <div class="bar-row">
+          <div class="bar-label">{{ d.day[:3] }}</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: {{ (d.rate / max_rate * 100) if max_rate else 0 }}%"></div>
+          </div>
+          <div class="bar-value {{ 'rate-high' if d.rate >= 30 else ('rate-mid' if d.rate >= 15 else 'rate-low') }}">{{ d.rate }}%</div>
+          <div class="bar-count">({{ d.responded }}/{{ d.sent }})</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% if stats.message_length %}
+      <div>
+        <h3 style="font-size: 1em; margin-bottom: 12px; color: #86868b;">Response Rate by Message Length</h3>
+        {% set max_len_rate = stats.message_length | map(attribute='rate') | max %}
+        {% for l in stats.message_length %}
+        <div class="bar-row">
+          <div class="bar-label">{{ l.label }}</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: {{ (l.rate / max_len_rate * 100) if max_len_rate else 0 }}%"></div>
+          </div>
+          <div class="bar-value {{ 'rate-high' if l.rate >= 30 else ('rate-mid' if l.rate >= 15 else 'rate-low') }}">{{ l.rate }}%</div>
+          <div class="bar-count">({{ l.responded }}/{{ l.sent }})</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% if stats.response_timing %}
+    <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #f0f0f2;">
+      <h3 style="font-size: 1em; margin-bottom: 8px; color: #86868b;">Response Speed</h3>
+      <div style="font-size: 0.92em;">
+        <strong>{{ ((stats.response_timing.within_1h / stats.response_timing.total) * 100) | round(0) | int }}%</strong> respond within 1 hour,
+        <strong>{{ ((stats.response_timing.within_1d / stats.response_timing.total) * 100) | round(0) | int }}%</strong> within 1 day,
+        <strong>{{ ((stats.response_timing.within_1w / stats.response_timing.total) * 100) | round(0) | int }}%</strong> within 1 week
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <h2>Templates</h2>
+    <table>
+      <thead>
+        <tr><th>Template</th><th>Preview</th><th>Sent</th><th>Responses</th><th>Rate</th></tr>
+      </thead>
+      <tbody>
+        {% for t in stats.templates %}
+        <tr id="template-{{ t.id }}">
+          <td><strong>#{{ t.id }}</strong></td>
+          <td class="preview">{{ t.preview }}</td>
+          <td>{{ t.sent }}</td>
+          <td>{{ t.responded }}</td>
+          <td class="{{ 'rate-high' if t.rate >= 30 else ('rate-mid' if t.rate >= 15 else 'rate-low') }}">{{ t.rate }}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if stats.personas %}
+  <div class="card">
+    <h2>Personas</h2>
+    <table>
+      <thead>
+        <tr><th>Persona</th><th>Titles</th><th>Response Rate</th><th>Templates</th><th>Example Companies</th></tr>
+      </thead>
+      <tbody>
+        {% for p in stats.personas %}
+        <tr>
+          <td><strong>{{ p.name }}</strong></td>
+          <td class="preview">{{ p.titles }}</td>
+          <td><span class="{{ 'rate-high' if p.rate >= 30 else ('rate-mid' if p.rate >= 15 else 'rate-low') }}">{{ p.rate }}%</span> <span class="preview">({{ p.responded }}/{{ p.contacted }})</span></td>
+          <td>{% for t in p.templates %}{% if t.in_report %}<a href="#template-{{ t.id }}">#{{ t.id }}</a>{% else %}<span class="preview">#{{ t.id }}</span>{% endif %} <span class="preview">({{ t.responded }}/{{ t.sent }})</span>{% if not loop.last %}, {% endif %}{% endfor %}</td>
+          <td class="preview">{{ p.companies }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  <footer>Generated on {{ now }} &middot; OutreachAnalyzer by <a href="https://www.salora.ai">Salora AI</a></footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,13 @@
+# OutreachAnalyzer Configuration
+# Add your OpenAI API key for AI-powered persona classification.
+# Without it, titles will be auto-clustered using fuzzy matching.
+openai_api_key: # Your OpenAI API key here (optional)
+
+# Minimum number of messages using the same template to include it in the report.
+# Templates with fewer messages are considered one-off/customized and are excluded.
+min_template_messages: 5
+
+# Minimum number of contacts in a persona group to include it in the report.
+# Personas with fewer contacts are too granular to be useful.
+min_persona_contacts: 2
+
